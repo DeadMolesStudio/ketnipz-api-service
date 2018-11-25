@@ -5,11 +5,11 @@ import (
 
 	httpSwagger "github.com/swaggo/http-swagger"
 
+	"github.com/go-park-mail-ru/2018_2_DeadMolesStudio/database"
 	"github.com/go-park-mail-ru/2018_2_DeadMolesStudio/logger"
 	"github.com/go-park-mail-ru/2018_2_DeadMolesStudio/middleware"
 	"github.com/go-park-mail-ru/2018_2_DeadMolesStudio/session"
 
-	"api/database"
 	_ "api/docs"
 	"api/filesystem"
 	"api/handlers"

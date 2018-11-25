@@ -2,6 +2,8 @@ package database
 
 import (
 	"api/models"
+
+	db "github.com/go-park-mail-ru/2018_2_DeadMolesStudio/database"
 )
 
 func GetUserPositionsDescendingPaginated(p *models.FetchScoreboardPage) (
@@ -13,7 +15,7 @@ func GetUserPositionsDescendingPaginated(p *models.FetchScoreboardPage) (
 	}
 
 	// TODO: optimize it
-	rows, err := db.Queryx(`
+	rows, err := db.DB().Queryx(`
 		SELECT user_id, nickname, record FROM user_profile
 		ORDER BY record DESC
 		LIMIT $1

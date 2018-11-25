@@ -8,6 +8,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 
+	db "github.com/go-park-mail-ru/2018_2_DeadMolesStudio/database"
 	"github.com/go-park-mail-ru/2018_2_DeadMolesStudio/logger"
 	"github.com/go-park-mail-ru/2018_2_DeadMolesStudio/middleware"
 
@@ -273,8 +274,8 @@ func postProfile(w http.ResponseWriter, r *http.Request) {
 	} else {
 		newU, err := database.CreateNewUser(u)
 		if err != nil {
-			if err == database.ErrUniqueConstraintViolation ||
-				err == database.ErrNotNullConstraintViolation {
+			if err == db.ErrUniqueConstraintViolation ||
+				err == db.ErrNotNullConstraintViolation {
 				w.WriteHeader(http.StatusUnprocessableEntity)
 				return
 			}

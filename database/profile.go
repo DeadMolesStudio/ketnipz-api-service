@@ -6,12 +6,15 @@ import (
 
 	"github.com/lib/pq"
 
+	db "github.com/go-park-mail-ru/2018_2_DeadMolesStudio/database"
+
 	"api/models"
 )
 
 func GetUserPassword(e string) (models.User, error) {
 	res := models.User{}
-	qres := db.QueryRowx(`
+
+	qres := db.DB().QueryRowx(`
 		SELECT user_id, email, password FROM user_profile
 		WHERE email = $1`,
 		e)
@@ -31,7 +34,7 @@ func GetUserPassword(e string) (models.User, error) {
 
 func CreateNewUser(u *models.RegisterProfile) (models.Profile, error) {
 	res := models.Profile{}
-	qres := db.QueryRowx(`
+	qres := db.DB().QueryRowx(`
 		INSERT INTO user_profile (email, password, nickname)
 		VALUES ($1, $2, $3) RETURNING user_id, email, nickname`,
 		u.Email, u.Password, u.Nickname)
@@ -39,9 +42,9 @@ func CreateNewUser(u *models.RegisterProfile) (models.Profile, error) {
 		pqErr := err.(*pq.Error)
 		switch pqErr.Code {
 		case "23502":
-			return res, ErrNotNullConstraintViolation
+			return res, db.ErrNotNullConstraintViolation
 		case "23505":
-			return res, ErrUniqueConstraintViolation
+			return res, db.ErrUniqueConstraintViolation
 		}
 	}
 	err := qres.StructScan(&res)
@@ -82,7 +85,7 @@ func UpdateUserByID(id uint, u *models.RegisterProfile) error {
 	q.WriteString(`
 		WHERE user_id = :user_id`)
 
-	_, err := db.NamedExec(q.String(), &models.Profile{
+	_, err := db.DB().NamedExec(q.String(), &models.Profile{
 		User: models.User{
 			UserID: id,
 			UserPassword: models.UserPassword{
@@ -101,7 +104,7 @@ func UpdateUserByID(id uint, u *models.RegisterProfile) error {
 
 func GetUserProfileByID(id uint) (models.Profile, error) {
 	res := models.Profile{}
-	qres := db.QueryRowx(`
+	qres := db.DB().QueryRowx(`
 		SELECT user_id, email, nickname, avatar, record, win, draws, loss FROM user_profile
 		WHERE user_id = $1`,
 		id)
@@ -121,7 +124,7 @@ func GetUserProfileByID(id uint) (models.Profile, error) {
 
 func GetUserProfileByNickname(nickname string) (models.Profile, error) {
 	res := models.Profile{}
-	qres := db.QueryRowx(`
+	qres := db.DB().QueryRowx(`
 		SELECT user_id, email, nickname, avatar, record, win, draws, loss FROM user_profile
 		WHERE nickname = $1`,
 		nickname)
@@ -141,7 +144,7 @@ func GetUserProfileByNickname(nickname string) (models.Profile, error) {
 
 func CheckExistenceOfEmail(e string) (bool, error) {
 	res := models.Profile{}
-	qres := db.QueryRowx(`
+	qres := db.DB().QueryRowx(`
 		SELECT FROM user_profile
 		WHERE email = $1`,
 		e)
@@ -161,7 +164,7 @@ func CheckExistenceOfEmail(e string) (bool, error) {
 
 func CheckExistenceOfNickname(n string) (bool, error) {
 	res := models.Profile{}
-	qres := db.QueryRowx(`
+	qres := db.DB().QueryRowx(`
 		SELECT FROM user_profile
 		WHERE nickname = $1`,
 		n)
@@ -182,7 +185,7 @@ func CheckExistenceOfNickname(n string) (bool, error) {
 func GetCountOfUsers() (int, error) {
 	res := 0
 	// TODO: optimize it
-	qres := db.QueryRowx(`
+	qres := db.DB().QueryRowx(`
 		SELECT COUNT(*) FROM user_profile`)
 	if err := qres.Err(); err != nil {
 		return 0, err
@@ -196,7 +199,7 @@ func GetCountOfUsers() (int, error) {
 }
 
 func UploadAvatar(uID uint, path string) error {
-	qres, err := db.Exec(`
+	qres, err := db.DB().Exec(`
 		UPDATE user_profile
 		SET avatar = $2
 		WHERE user_id = $1`,
@@ -216,7 +219,7 @@ func UploadAvatar(uID uint, path string) error {
 }
 
 func DeleteAvatar(uID uint) error {
-	qres, err := db.Exec(`
+	qres, err := db.DB().Exec(`
 		UPDATE user_profile
 		SET avatar = NULL
 		WHERE user_id = $1`,
