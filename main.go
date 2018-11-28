@@ -35,17 +35,17 @@ func main() {
 	http.HandleFunc(
 		"/session", 
 		middleware.RecoverMiddleware(metrics.MetricsHitsMiddleware(middleware.AccessLogMiddleware(
-		middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.SessionHandler))))),
+		middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.SessionHandler(sm), sm))))),
 	)
 	http.HandleFunc(
 		"/profile", 
 		middleware.RecoverMiddleware(metrics.MetricsHitsMiddleware(middleware.AccessLogMiddleware(
-		middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.ProfileHandler))))),
+		middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.ProfileHandler(sm), sm))))),
 	)
 	http.HandleFunc(
 		"/profile/avatar", 
 		middleware.RecoverMiddleware(metrics.MetricsHitsMiddleware(middleware.AccessLogMiddleware(
-		middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.AvatarHandler))))),
+		middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.AvatarHandler, sm))))),
 	)
 	http.HandleFunc(
 		"/scoreboard", 

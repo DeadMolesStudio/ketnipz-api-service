@@ -10,6 +10,7 @@ import (
 	db "github.com/go-park-mail-ru/2018_2_DeadMolesStudio/database"
 	"github.com/go-park-mail-ru/2018_2_DeadMolesStudio/logger"
 	"github.com/go-park-mail-ru/2018_2_DeadMolesStudio/middleware"
+	"github.com/go-park-mail-ru/2018_2_DeadMolesStudio/session"
 
 	"api/database"
 	"api/filesystem"
@@ -118,16 +119,18 @@ func validateFields(u *models.RegisterProfile) ([]models.ProfileError, error) {
 	return errors, nil
 }
 
-func ProfileHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		getProfile(w, r)
-	case http.MethodPost:
-		postProfile(w, r)
-	case http.MethodPut:
-		putProfile(w, r)
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+func ProfileHandler(sm *session.SessionManager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			getProfile(w, r)
+		case http.MethodPost:
+			postProfile(w, r, sm)
+		case http.MethodPut:
+			putProfile(w, r)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
 	}
 }
 
@@ -235,7 +238,7 @@ func getProfile(w http.ResponseWriter, r *http.Request) {
 // @Failure 422 "При регистрации не все параметры"
 // @Failure 500 "Ошибка в бд"
 // @Router /profile [POST]
-func postProfile(w http.ResponseWriter, r *http.Request) {
+func postProfile(w http.ResponseWriter, r *http.Request, sm *session.SessionManager) {
 	u := &models.RegisterProfile{}
 	err := cleanProfile(r, u)
 	if err != nil {
@@ -284,7 +287,7 @@ func postProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = loginUser(w, newU.UserID)
+		err = loginUser(w, sm, newU.UserID)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return

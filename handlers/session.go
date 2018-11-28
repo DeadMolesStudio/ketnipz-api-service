@@ -31,8 +31,8 @@ func cleanLoginInfo(r *http.Request, u *models.UserPassword) error {
 	return nil
 }
 
-func loginUser(w http.ResponseWriter, userID uint) error {
-	sessionID, err := session.Create(userID)
+func loginUser(w http.ResponseWriter, sm *session.SessionManager, userID uint) error {
+	sessionID, err := sm.Create(userID)
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -50,16 +50,18 @@ func loginUser(w http.ResponseWriter, userID uint) error {
 	return nil
 }
 
-func SessionHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		getSession(w, r)
-	case http.MethodPost:
-		postSession(w, r)
-	case http.MethodDelete:
-		deleteSession(w, r)
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+func SessionHandler(sm *session.SessionManager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			getSession(w, r)
+		case http.MethodPost:
+			postSession(w, r, sm)
+		case http.MethodDelete:
+			deleteSession(w, r, sm)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
 	}
 }
 
@@ -99,7 +101,7 @@ func getSession(w http.ResponseWriter, r *http.Request) {
 // @Failure 422 "Неверная пара пользователь/пароль"
 // @Failure 500 "Внутренняя ошибка"
 // @Router /session [POST]
-func postSession(w http.ResponseWriter, r *http.Request) {
+func postSession(w http.ResponseWriter, r *http.Request, sm *session.SessionManager) {
 	if r.Context().Value(middleware.KeyIsAuthenticated).(bool) {
 		// user has already logged in
 		return
@@ -135,7 +137,7 @@ func postSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if u.Email == dbResponse.Email && u.Password == dbResponse.Password {
-		err := loginUser(w, dbResponse.UserID)
+		err := loginUser(w, sm, dbResponse.UserID)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -151,12 +153,12 @@ func postSession(w http.ResponseWriter, r *http.Request) {
 // @ID delete-session
 // @Success 200 "Успешный выход / пользователь уже разлогинен"
 // @Router /session [DELETE]
-func deleteSession(w http.ResponseWriter, r *http.Request) {
+func deleteSession(w http.ResponseWriter, r *http.Request, sm *session.SessionManager) {
 	if !r.Context().Value(middleware.KeyIsAuthenticated).(bool) {
 		// user has already logged out
 		return
 	}
-	err := session.Delete(r.Context().Value(middleware.KeySessionID).(string))
+	err := sm.Delete(r.Context().Value(middleware.KeySessionID).(string))
 	if err != nil { // but we continue
 		logger.Error(err)
 	}

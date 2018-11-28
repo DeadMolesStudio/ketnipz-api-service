@@ -18,13 +18,8 @@ github.com/go-openapi/spec v0.17.2 h1:eb2NbuCnoe8cWAxhtK6CfMWUYmiFEZJ9Hx3Z2WRwJ5
 github.com/go-openapi/spec v0.17.2/go.mod h1:XkF/MOi14NmjsfZ8VtAKf8pIlbZzyoTvZsdfssdxcBI=
 github.com/go-openapi/swag v0.17.0 h1:iqrgMg7Q7SvtbWLlltPrkMs0UBJI6oTSs79JFRUi880=
 github.com/go-openapi/swag v0.17.0/go.mod h1:AByQ+nYG6gQg71GINrmuDXCPWdL640yX49/kXLo40Tg=
-github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181122111002-96fcd3c2b305 h1:2C3SIEhae4dgDq2ZsqWB7+2pBAEofj8t24GuFCOF1zU=
-github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181122111002-96fcd3c2b305/go.mod h1:VbsS4QHLGVhPNvCarmGIoKsezeWdqFFQlTQGpnk1Mn0=
-github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181125072946-f2ad4a04856c h1:5OnkiIALADljPOFt4oSIMSgaAok+hK0KKkRDYXGxSJ0=
-github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181125075630-1c5f604ab35e h1:56i+9ve/WgSgwUbhjpSFjGuNMQM9dk3zTSKBIPYm6aE=
-github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181125075630-1c5f604ab35e/go.mod h1:xTOFkaIbhniZ0snOowIgjyiD8PBLCPOet29al2TOgOs=
-github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181128085129-1359fdcda6be h1:jwsPzE5F1a7g7O9FLPGoKBKJG7bJxLH6FIWX/JY+/ao=
-github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181128085129-1359fdcda6be/go.mod h1:xTOFkaIbhniZ0snOowIgjyiD8PBLCPOet29al2TOgOs=
+github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181128194106-a2a7aee1ac3d h1:wu5XyYWWxs/OjmIxEs65DdcaFovoTS4LzcrkEil5Iv0=
+github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181128194106-a2a7aee1ac3d/go.mod h1:xTOFkaIbhniZ0snOowIgjyiD8PBLCPOet29al2TOgOs=
 github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
 github.com/golang/lint v0.0.0-20180702182130-06c8688daad7/go.mod h1:tluoj9z5200jBnyusfRPU2LqT6J+DAorxEvtC7LHB+E=
