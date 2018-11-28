@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -24,7 +23,7 @@ func cleanLoginInfo(r *http.Request, u *models.UserPassword) error {
 		return err
 	}
 
-	err = json.Unmarshal(body, u)
+	err = u.UnmarshalJSON(body)
 	if err != nil {
 		return ParseJSONError{err}
 	}
@@ -74,7 +73,8 @@ func SessionHandler(w http.ResponseWriter, r *http.Request) {
 // @Router /session [GET]
 func getSession(w http.ResponseWriter, r *http.Request) {
 	if r.Context().Value(middleware.KeyIsAuthenticated).(bool) {
-		sID, err := json.Marshal(models.Session{SessionID: r.Context().Value(middleware.KeySessionID).(string)})
+		sendSession := models.Session{SessionID: r.Context().Value(middleware.KeySessionID).(string)}
+		sID, err := sendSession.MarshalJSON()
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)

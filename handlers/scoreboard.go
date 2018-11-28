@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -42,7 +41,7 @@ func ScoreboardHandler(w http.ResponseWriter, r *http.Request) {
 			List:  records,
 			Total: total,
 		}
-		json, err := json.Marshal(positionsList)
+		json, err := positionsList.MarshalJSON()
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)

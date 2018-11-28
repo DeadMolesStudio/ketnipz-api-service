@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -10,6 +9,7 @@ import (
 	"api/models"
 )
 
+//easyjson:json
 type ParseJSONError struct {
 	msg error
 }
@@ -19,7 +19,8 @@ func (e ParseJSONError) Error() string {
 }
 
 func sendError(w http.ResponseWriter, r *http.Request, e error, status int) {
-	m, err := json.Marshal(models.Error{What: e.Error()})
+	errStruct := models.Error{What: e.Error()}
+	m, err := errStruct.MarshalJSON()
 	if err != nil {
 		logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)

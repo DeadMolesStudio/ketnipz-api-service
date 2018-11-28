@@ -8,6 +8,7 @@ require (
 	github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181128085129-1359fdcda6be
 	github.com/gorilla/schema v1.0.2
 	github.com/lib/pq v1.0.0
+	github.com/mailru/easyjson v0.0.0-20180823135443-60711f1a8329
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/prometheus/client_golang v0.9.1

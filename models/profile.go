@@ -1,5 +1,6 @@
 package models
 
+//easyjson:json
 type Profile struct {
 	User
 	Nickname string  `json:"nickname" example:"Nick"`
@@ -7,16 +8,19 @@ type Profile struct {
 	Stats
 }
 
+//easyjson:json
 type RegisterProfile struct {
 	Nickname string `json:"nickname" example:"Nick"`
 	UserPassword
 }
 
+//easyjson:json
 type User struct {
 	UserID uint `json:"id" db:"user_id"`
 	UserPassword
 }
 
+//easyjson:json
 type UserPassword struct {
 	Email    string `json:"email" example:"email@email.com" valid:"required~Почта не может быть пустой,email~Невалидная почта"`
 	Password string `json:"password,omitempty" example:"password" valid:"stringlength(8|32)~Пароль должен быть не менее 8 символов и не более 32 символов"`
@@ -34,6 +38,7 @@ type ProfileError struct {
 	Text  string `json:"text" example:"Этот никнейм уже занят"`
 }
 
+//easyjson:json
 type ProfileErrorList struct {
 	Errors []ProfileError `json:"error"`
 }

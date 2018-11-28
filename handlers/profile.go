@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -24,7 +23,7 @@ func cleanProfile(r *http.Request, p *models.RegisterProfile) error {
 		return err
 	}
 
-	err = json.Unmarshal(body, p)
+	err = p.UnmarshalJSON(body)
 	if err != nil {
 		return ParseJSONError{err}
 	}
@@ -166,7 +165,7 @@ func getProfile(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json, err := json.Marshal(profile)
+		json, err := profile.MarshalJSON()
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -188,7 +187,7 @@ func getProfile(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json, err := json.Marshal(profile)
+		json, err := profile.MarshalJSON()
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -214,7 +213,7 @@ func getProfile(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json, err := json.Marshal(profile)
+		json, err := profile.MarshalJSON()
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -261,7 +260,8 @@ func postProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(fieldErrors) != 0 {
-		json, err := json.Marshal(models.ProfileErrorList{Errors: fieldErrors})
+		sendList := models.ProfileErrorList{Errors: fieldErrors}
+		json, err := sendList.MarshalJSON()
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -352,7 +352,8 @@ func putProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(fieldErrors) != 0 {
-		json, err := json.Marshal(models.ProfileErrorList{Errors: fieldErrors})
+		sendList := models.ProfileErrorList{Errors: fieldErrors}
+		json, err := sendList.MarshalJSON()
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
