@@ -11,17 +11,20 @@ import (
 	"api/models"
 )
 
-func GetUserPassword(e string) (models.User, error) {
+func GetUserPassword(dm *db.DatabaseManager, e string) (models.User, error) {
 	res := models.User{}
-
-	qres := db.DB().QueryRowx(`
+	dbo, err := dm.DB()
+	if err != nil {
+		return res, err
+	}
+	qres := dbo.QueryRowx(`
 		SELECT user_id, email, password FROM user_profile
 		WHERE email = $1`,
 		e)
 	if err := qres.Err(); err != nil {
 		return res, err
 	}
-	err := qres.StructScan(&res)
+	err = qres.StructScan(&res)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return res, UserNotFoundError{"email"}
@@ -32,9 +35,13 @@ func GetUserPassword(e string) (models.User, error) {
 	return res, nil
 }
 
-func CreateNewUser(u *models.RegisterProfile) (models.Profile, error) {
+func CreateNewUser(dm *db.DatabaseManager, u *models.RegisterProfile) (models.Profile, error) {
 	res := models.Profile{}
-	qres := db.DB().QueryRowx(`
+	dbo, err := dm.DB()
+	if err != nil {
+		return res, err
+	}
+	qres := dbo.QueryRowx(`
 		INSERT INTO user_profile (email, password, nickname)
 		VALUES ($1, $2, $3) RETURNING user_id, email, nickname`,
 		u.Email, u.Password, u.Nickname)
@@ -47,7 +54,7 @@ func CreateNewUser(u *models.RegisterProfile) (models.Profile, error) {
 			return res, db.ErrUniqueConstraintViolation
 		}
 	}
-	err := qres.StructScan(&res)
+	err = qres.StructScan(&res)
 	if err != nil {
 		return res, err
 	}
@@ -55,7 +62,7 @@ func CreateNewUser(u *models.RegisterProfile) (models.Profile, error) {
 	return res, nil
 }
 
-func UpdateUserByID(id uint, u *models.RegisterProfile) error {
+func UpdateUserByID(dm *db.DatabaseManager, id uint, u *models.RegisterProfile) error {
 	if u.Email == "" && u.Password == "" && u.Nickname == "" {
 		return nil
 	}
@@ -85,7 +92,11 @@ func UpdateUserByID(id uint, u *models.RegisterProfile) error {
 	q.WriteString(`
 		WHERE user_id = :user_id`)
 
-	_, err := db.DB().NamedExec(q.String(), &models.Profile{
+	dbo, err := dm.DB()
+	if err != nil {
+		return err
+	}
+	_, err = dbo.NamedExec(q.String(), &models.Profile{
 		User: models.User{
 			UserID: id,
 			UserPassword: models.UserPassword{
@@ -102,16 +113,20 @@ func UpdateUserByID(id uint, u *models.RegisterProfile) error {
 	return nil
 }
 
-func GetUserProfileByID(id uint) (models.Profile, error) {
+func GetUserProfileByID(dm *db.DatabaseManager, id uint) (models.Profile, error) {
 	res := models.Profile{}
-	qres := db.DB().QueryRowx(`
+	dbo, err := dm.DB()
+	if err != nil {
+		return res, err
+	}
+	qres := dbo.QueryRowx(`
 		SELECT user_id, email, nickname, avatar, record, win, draws, loss FROM user_profile
 		WHERE user_id = $1`,
 		id)
 	if err := qres.Err(); err != nil {
 		return res, err
 	}
-	err := qres.StructScan(&res)
+	err = qres.StructScan(&res)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return res, UserNotFoundError{"id"}
@@ -122,16 +137,20 @@ func GetUserProfileByID(id uint) (models.Profile, error) {
 	return res, nil
 }
 
-func GetUserProfileByNickname(nickname string) (models.Profile, error) {
+func GetUserProfileByNickname(dm *db.DatabaseManager, nickname string) (models.Profile, error) {
 	res := models.Profile{}
-	qres := db.DB().QueryRowx(`
+	dbo, err := dm.DB()
+	if err != nil {
+		return res, err
+	}
+	qres := dbo.QueryRowx(`
 		SELECT user_id, email, nickname, avatar, record, win, draws, loss FROM user_profile
 		WHERE nickname = $1`,
 		nickname)
 	if err := qres.Err(); err != nil {
 		return res, err
 	}
-	err := qres.StructScan(&res)
+	err = qres.StructScan(&res)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return res, UserNotFoundError{"nickname"}
@@ -142,16 +161,20 @@ func GetUserProfileByNickname(nickname string) (models.Profile, error) {
 	return res, nil
 }
 
-func CheckExistenceOfEmail(e string) (bool, error) {
-	res := models.Profile{}
-	qres := db.DB().QueryRowx(`
-		SELECT FROM user_profile
-		WHERE email = $1`,
+func CheckExistenceOfEmail(dm *db.DatabaseManager, e string) (bool, error) {
+	dbo, err := dm.DB()
+	if err != nil {
+		return false, err
+	}
+	qres := dbo.QueryRowx(`
+	SELECT FROM user_profile
+	WHERE email = $1`,
 		e)
 	if err := qres.Err(); err != nil {
 		return false, err
 	}
-	err := qres.StructScan(&res)
+	res := models.Profile{}
+	err = qres.StructScan(&res)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil
@@ -162,16 +185,20 @@ func CheckExistenceOfEmail(e string) (bool, error) {
 	return true, nil
 }
 
-func CheckExistenceOfNickname(n string) (bool, error) {
+func CheckExistenceOfNickname(dm *db.DatabaseManager, n string) (bool, error) {
 	res := models.Profile{}
-	qres := db.DB().QueryRowx(`
+	dbo, err := dm.DB()
+	if err != nil {
+		return false, err
+	}
+	qres := dbo.QueryRowx(`
 		SELECT FROM user_profile
 		WHERE nickname = $1`,
 		n)
 	if err := qres.Err(); err != nil {
 		return false, err
 	}
-	err := qres.StructScan(&res)
+	err = qres.StructScan(&res)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil
@@ -182,15 +209,19 @@ func CheckExistenceOfNickname(n string) (bool, error) {
 	return true, nil
 }
 
-func GetCountOfUsers() (int, error) {
-	res := 0
+func GetCountOfUsers(dm *db.DatabaseManager) (int, error) {
+	dbo, err := dm.DB()
+	if err != nil {
+		return 0, err
+	}
 	// TODO: optimize it
-	qres := db.DB().QueryRowx(`
-		SELECT COUNT(*) FROM user_profile`)
+	qres := dbo.QueryRowx(`
+	SELECT COUNT(*) FROM user_profile`)
 	if err := qres.Err(); err != nil {
 		return 0, err
 	}
-	err := qres.Scan(&res)
+	res := 0
+	err = qres.Scan(&res)
 	if err != nil {
 		return 0, err
 	}
@@ -198,8 +229,12 @@ func GetCountOfUsers() (int, error) {
 	return res, nil
 }
 
-func UploadAvatar(uID uint, path string) error {
-	qres, err := db.DB().Exec(`
+func UploadAvatar(dm *db.DatabaseManager, uID uint, path string) error {
+	dbo, err := dm.DB()
+	if err != nil {
+		return err
+	}
+	qres, err := dbo.Exec(`
 		UPDATE user_profile
 		SET avatar = $2
 		WHERE user_id = $1`,
@@ -218,8 +253,12 @@ func UploadAvatar(uID uint, path string) error {
 	return nil
 }
 
-func DeleteAvatar(uID uint) error {
-	qres, err := db.DB().Exec(`
+func DeleteAvatar(dm *db.DatabaseManager, uID uint) error {
+	dbo, err := dm.DB()
+	if err != nil {
+		return err
+	}
+	qres, err := dbo.Exec(`
 		UPDATE user_profile
 		SET avatar = NULL
 		WHERE user_id = $1`,

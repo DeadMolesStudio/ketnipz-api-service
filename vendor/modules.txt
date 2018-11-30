@@ -14,7 +14,7 @@ github.com/go-openapi/jsonreference
 github.com/go-openapi/spec
 # github.com/go-openapi/swag v0.17.0
 github.com/go-openapi/swag
-# github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181128194106-a2a7aee1ac3d
+# github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181130120947-70c35d149846
 github.com/go-park-mail-ru/2018_2_DeadMolesStudio/database
 github.com/go-park-mail-ru/2018_2_DeadMolesStudio/logger
 github.com/go-park-mail-ru/2018_2_DeadMolesStudio/middleware
@@ -96,7 +96,7 @@ golang.org/x/text/width
 golang.org/x/text/secure/bidirule
 golang.org/x/text/unicode/bidi
 golang.org/x/text/transform
-# golang.org/x/tools v0.0.0-20180828015842-6cd1fcedba52
+# golang.org/x/tools v0.0.0-20181130052023-1c3d964395ce
 golang.org/x/tools/go/loader
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/buildutil

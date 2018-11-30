@@ -24,8 +24,8 @@ func main() {
 
 	prometheus.MustRegister(metrics.AccessHits)
 
-	db := database.InitDB("postgres@postgres:5432", "ketnipz")
-	defer db.Close()
+	dm := database.InitDatabaseManager("postgres@postgres:5432", "ketnipz")
+	defer dm.Close()
 
 	sm := session.ConnectSessionManager()
 	defer sm.Close()
@@ -35,22 +35,22 @@ func main() {
 	http.HandleFunc(
 		"/session", 
 		middleware.RecoverMiddleware(metrics.MetricsHitsMiddleware(middleware.AccessLogMiddleware(
-		middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.SessionHandler(sm), sm))))),
+		middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.SessionHandler(dm, sm), sm))))),
 	)
 	http.HandleFunc(
 		"/profile", 
 		middleware.RecoverMiddleware(metrics.MetricsHitsMiddleware(middleware.AccessLogMiddleware(
-		middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.ProfileHandler(sm), sm))))),
+		middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.ProfileHandler(dm, sm), sm))))),
 	)
 	http.HandleFunc(
 		"/profile/avatar", 
 		middleware.RecoverMiddleware(metrics.MetricsHitsMiddleware(middleware.AccessLogMiddleware(
-		middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.AvatarHandler, sm))))),
+		middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.AvatarHandler(dm), sm))))),
 	)
 	http.HandleFunc(
 		"/scoreboard", 
 		middleware.RecoverMiddleware(metrics.MetricsHitsMiddleware(middleware.AccessLogMiddleware(
-		middleware.CORSMiddleware(handlers.ScoreboardHandler)))),
+		middleware.CORSMiddleware(handlers.ScoreboardHandler(dm))))),
 	)
 
 	// swag init -g handlers/api.go

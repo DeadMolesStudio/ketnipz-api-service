@@ -8,6 +8,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 
+	db "github.com/go-park-mail-ru/2018_2_DeadMolesStudio/database"
 	"github.com/go-park-mail-ru/2018_2_DeadMolesStudio/logger"
 	"github.com/go-park-mail-ru/2018_2_DeadMolesStudio/middleware"
 	"github.com/go-park-mail-ru/2018_2_DeadMolesStudio/session"
@@ -50,13 +51,13 @@ func loginUser(w http.ResponseWriter, sm *session.SessionManager, userID uint) e
 	return nil
 }
 
-func SessionHandler(sm *session.SessionManager) http.HandlerFunc {
+func SessionHandler(dm *db.DatabaseManager, sm *session.SessionManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			getSession(w, r)
 		case http.MethodPost:
-			postSession(w, r, sm)
+			postSession(w, r, dm, sm)
 		case http.MethodDelete:
 			deleteSession(w, r, sm)
 		default:
@@ -101,7 +102,7 @@ func getSession(w http.ResponseWriter, r *http.Request) {
 // @Failure 422 "Неверная пара пользователь/пароль"
 // @Failure 500 "Внутренняя ошибка"
 // @Router /session [POST]
-func postSession(w http.ResponseWriter, r *http.Request, sm *session.SessionManager) {
+func postSession(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager, sm *session.SessionManager) {
 	if r.Context().Value(middleware.KeyIsAuthenticated).(bool) {
 		// user has already logged in
 		return
@@ -125,7 +126,7 @@ func postSession(w http.ResponseWriter, r *http.Request, sm *session.SessionMana
 		return
 	}
 
-	dbResponse, err := database.GetUserPassword(u.Email)
+	dbResponse, err := database.GetUserPassword(dm, u.Email)
 
 	if err != nil {
 		switch err.(type) {

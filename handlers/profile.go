@@ -32,7 +32,7 @@ func cleanProfile(r *http.Request, p *models.RegisterProfile) error {
 	return nil
 }
 
-func validateNickname(s string) ([]models.ProfileError, error) {
+func validateNickname(dm *db.DatabaseManager, s string) ([]models.ProfileError, error) {
 	var errors []models.ProfileError
 
 	isValid := govalidator.StringLength(s, "4", "32")
@@ -44,7 +44,7 @@ func validateNickname(s string) ([]models.ProfileError, error) {
 		return errors, nil
 	}
 
-	exists, err := database.CheckExistenceOfNickname(s)
+	exists, err := database.CheckExistenceOfNickname(dm, s)
 	if err != nil {
 		logger.Error(err)
 		return errors, err
@@ -59,7 +59,7 @@ func validateNickname(s string) ([]models.ProfileError, error) {
 	return errors, nil
 }
 
-func validateEmail(s string) ([]models.ProfileError, error) {
+func validateEmail(dm *db.DatabaseManager, s string) ([]models.ProfileError, error) {
 	var errors []models.ProfileError
 
 	isValid := govalidator.IsEmail(s)
@@ -71,7 +71,7 @@ func validateEmail(s string) ([]models.ProfileError, error) {
 		return errors, nil
 	}
 
-	exists, err := database.CheckExistenceOfEmail(s)
+	exists, err := database.CheckExistenceOfEmail(dm, s)
 	if err != nil {
 		logger.Error(err)
 		return errors, err
@@ -100,16 +100,16 @@ func validatePassword(s string) []models.ProfileError {
 	return errors
 }
 
-func validateFields(u *models.RegisterProfile) ([]models.ProfileError, error) {
+func validateFields(dm *db.DatabaseManager, u *models.RegisterProfile) ([]models.ProfileError, error) {
 	var errors []models.ProfileError
 
-	valErrors, dbErr := validateNickname(u.Nickname)
+	valErrors, dbErr := validateNickname(dm, u.Nickname)
 	if dbErr != nil {
 		return []models.ProfileError{}, dbErr
 	}
 	errors = append(errors, valErrors...)
 
-	valErrors, dbErr = validateEmail(u.Email)
+	valErrors, dbErr = validateEmail(dm, u.Email)
 	if dbErr != nil {
 		return []models.ProfileError{}, dbErr
 	}
@@ -119,15 +119,15 @@ func validateFields(u *models.RegisterProfile) ([]models.ProfileError, error) {
 	return errors, nil
 }
 
-func ProfileHandler(sm *session.SessionManager) http.HandlerFunc {
+func ProfileHandler(dm *db.DatabaseManager, sm *session.SessionManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			getProfile(w, r)
+			getProfile(w, r, dm)
 		case http.MethodPost:
-			postProfile(w, r, sm)
+			postProfile(w, r, dm, sm)
 		case http.MethodPut:
-			putProfile(w, r)
+			putProfile(w, r, dm)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
@@ -146,7 +146,7 @@ func ProfileHandler(sm *session.SessionManager) http.HandlerFunc {
 // @Failure 404 "Не найдено"
 // @Failure 500 "Ошибка в бд"
 // @Router /profile [GET]
-func getProfile(w http.ResponseWriter, r *http.Request) {
+func getProfile(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) {
 	params := &models.RequestProfile{}
 	err := decoder.Decode(params, r.URL.Query())
 	if err != nil {
@@ -154,7 +154,7 @@ func getProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if params.ID != 0 {
-		profile, err := database.GetUserProfileByID(params.ID)
+		profile, err := database.GetUserProfileByID(dm, params.ID)
 		if err != nil {
 			switch err.(type) {
 			case database.UserNotFoundError:
@@ -176,7 +176,7 @@ func getProfile(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Fprintln(w, string(json))
 	} else if params.Nickname != "" {
-		profile, err := database.GetUserProfileByNickname(params.Nickname)
+		profile, err := database.GetUserProfileByNickname(dm, params.Nickname)
 		if err != nil {
 			switch err.(type) {
 			case database.UserNotFoundError:
@@ -202,7 +202,7 @@ func getProfile(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		profile, err := database.GetUserProfileByID(r.Context().Value(middleware.KeyUserID).(uint))
+		profile, err := database.GetUserProfileByID(dm, r.Context().Value(middleware.KeyUserID).(uint))
 		if err != nil {
 			switch err.(type) {
 			case database.UserNotFoundError:
@@ -238,7 +238,7 @@ func getProfile(w http.ResponseWriter, r *http.Request) {
 // @Failure 422 "При регистрации не все параметры"
 // @Failure 500 "Ошибка в бд"
 // @Router /profile [POST]
-func postProfile(w http.ResponseWriter, r *http.Request, sm *session.SessionManager) {
+func postProfile(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager, sm *session.SessionManager) {
 	u := &models.RegisterProfile{}
 	err := cleanProfile(r, u)
 	if err != nil {
@@ -256,7 +256,7 @@ func postProfile(w http.ResponseWriter, r *http.Request, sm *session.SessionMana
 		return
 	}
 
-	fieldErrors, err := validateFields(u)
+	fieldErrors, err := validateFields(dm, u)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -275,7 +275,7 @@ func postProfile(w http.ResponseWriter, r *http.Request, sm *session.SessionMana
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprintln(w, string(json))
 	} else {
-		newU, err := database.CreateNewUser(u)
+		newU, err := database.CreateNewUser(dm, u)
 		if err != nil {
 			if err == db.ErrUniqueConstraintViolation ||
 				err == db.ErrNotNullConstraintViolation {
@@ -308,7 +308,7 @@ func postProfile(w http.ResponseWriter, r *http.Request, sm *session.SessionMana
 // @Failure 403 {object} models.ProfileErrorList "Ошибки при регистрации: невалидна или занята почта, занят ник, пароль не удовлетворяет правилам безопасности, другие ошибки"
 // @Failure 500 "Ошибка в бд"
 // @Router /profile [PUT]
-func putProfile(w http.ResponseWriter, r *http.Request) {
+func putProfile(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) {
 	if !r.Context().Value(middleware.KeyIsAuthenticated).(bool) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -333,7 +333,7 @@ func putProfile(w http.ResponseWriter, r *http.Request) {
 	var fieldErrors []models.ProfileError
 
 	if u.Nickname != "" {
-		valErrors, dbErr := validateNickname(u.Nickname)
+		valErrors, dbErr := validateNickname(dm, u.Nickname)
 		if dbErr != nil {
 			logger.Error(dbErr)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -342,7 +342,7 @@ func putProfile(w http.ResponseWriter, r *http.Request) {
 		fieldErrors = append(fieldErrors, valErrors...)
 	}
 	if u.Email != "" {
-		valErrors, dbErr := validateEmail(u.Email)
+		valErrors, dbErr := validateEmail(dm, u.Email)
 		if dbErr != nil {
 			logger.Error(dbErr)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -368,7 +368,7 @@ func putProfile(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, string(json))
 	} else {
 		id := r.Context().Value(middleware.KeyUserID).(uint)
-		err := database.UpdateUserByID(id, u)
+		err := database.UpdateUserByID(dm, id, u)
 		if err != nil {
 			switch err.(type) {
 			case database.UserNotFoundError:
@@ -383,14 +383,16 @@ func putProfile(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func AvatarHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPut:
-		putAvatar(w, r)
-	case http.MethodDelete:
-		deleteAvatar(w, r)
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+func AvatarHandler(dm *db.DatabaseManager) http.HandlerFunc {
+	return func (w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPut:
+			putAvatar(w, r, dm)
+		case http.MethodDelete:
+			deleteAvatar(w, r, dm)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
 	}
 }
 
@@ -403,7 +405,7 @@ func AvatarHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 "Пользователь не найден"
 // @Failure 500 "Ошибка при парсинге, в бд, файловой системе"
 // @Router /profile/avatar [PUT]
-func putAvatar(w http.ResponseWriter, r *http.Request) {
+func putAvatar(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) {
 	if !r.Context().Value(middleware.KeyIsAuthenticated).(bool) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -437,7 +439,7 @@ func putAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = database.UploadAvatar(uID, "/"+dir+filename)
+	err = database.UploadAvatar(dm, uID, "/"+dir+filename)
 	if err != nil {
 		switch err.(type) {
 		case *database.UserNotFoundError:
@@ -458,13 +460,13 @@ func putAvatar(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 "Пользователь не найден"
 // @Failure 500 "Ошибка в бд"
 // @Router /profile/avatar [DELETE]
-func deleteAvatar(w http.ResponseWriter, r *http.Request) {
+func deleteAvatar(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) {
 	if !r.Context().Value(middleware.KeyIsAuthenticated).(bool) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	err := database.DeleteAvatar(r.Context().Value(middleware.KeyUserID).(uint))
+	err := database.DeleteAvatar(dm, r.Context().Value(middleware.KeyUserID).(uint))
 	if err != nil {
 		switch err.(type) {
 		case *database.UserNotFoundError:
