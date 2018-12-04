@@ -40,7 +40,7 @@ func ScoreboardHandler(dm *db.DatabaseManager) http.HandlerFunc {
 			}
 
 			positionsList := models.PositionList{
-				List:  records,
+				List:  *records,
 				Total: total,
 			}
 			json, err := positionsList.MarshalJSON()

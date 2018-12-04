@@ -11,20 +11,16 @@ import (
 	"api/models"
 )
 
-func GetUserPassword(dm *db.DatabaseManager, e string) (models.User, error) {
-	res := models.User{}
+func GetUserPassword(dm *db.DatabaseManager, e string) (*models.User, error) {
 	dbo, err := dm.DB()
 	if err != nil {
-		return res, err
+		return nil, err
 	}
-	qres := dbo.QueryRowx(`
-		SELECT user_id, email, password FROM user_profile
-		WHERE email = $1`,
+	res := &models.User{}
+	err = dbo.Get(res, `
+	SELECT user_id, email, password FROM user_profile
+	WHERE email = $1`,
 		e)
-	if err := qres.Err(); err != nil {
-		return res, err
-	}
-	err = qres.StructScan(&res)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return res, UserNotFoundError{"email"}
@@ -35,11 +31,10 @@ func GetUserPassword(dm *db.DatabaseManager, e string) (models.User, error) {
 	return res, nil
 }
 
-func CreateNewUser(dm *db.DatabaseManager, u *models.RegisterProfile) (models.Profile, error) {
-	res := models.Profile{}
+func CreateNewUser(dm *db.DatabaseManager, u *models.RegisterProfile) (*models.Profile, error) {
 	dbo, err := dm.DB()
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 	qres := dbo.QueryRowx(`
 		INSERT INTO user_profile (email, password, nickname)
@@ -49,12 +44,13 @@ func CreateNewUser(dm *db.DatabaseManager, u *models.RegisterProfile) (models.Pr
 		pqErr := err.(*pq.Error)
 		switch pqErr.Code {
 		case "23502":
-			return res, db.ErrNotNullConstraintViolation
+			return nil, db.ErrNotNullConstraintViolation
 		case "23505":
-			return res, db.ErrUniqueConstraintViolation
+			return nil, db.ErrUniqueConstraintViolation
 		}
 	}
-	err = qres.StructScan(&res)
+	res := &models.Profile{}
+	err = qres.StructScan(res)
 	if err != nil {
 		return res, err
 	}
@@ -113,20 +109,16 @@ func UpdateUserByID(dm *db.DatabaseManager, id uint, u *models.RegisterProfile) 
 	return nil
 }
 
-func GetUserProfileByID(dm *db.DatabaseManager, id uint) (models.Profile, error) {
-	res := models.Profile{}
+func GetUserProfileByID(dm *db.DatabaseManager, id uint) (*models.Profile, error) {
 	dbo, err := dm.DB()
 	if err != nil {
-		return res, err
+		return nil, err
 	}
-	qres := dbo.QueryRowx(`
+	res := &models.Profile{}
+	err = dbo.Get(res, `
 		SELECT user_id, email, nickname, avatar, record, win, draws, loss FROM user_profile
 		WHERE user_id = $1`,
 		id)
-	if err := qres.Err(); err != nil {
-		return res, err
-	}
-	err = qres.StructScan(&res)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return res, UserNotFoundError{"id"}
@@ -137,20 +129,16 @@ func GetUserProfileByID(dm *db.DatabaseManager, id uint) (models.Profile, error)
 	return res, nil
 }
 
-func GetUserProfileByNickname(dm *db.DatabaseManager, nickname string) (models.Profile, error) {
-	res := models.Profile{}
+func GetUserProfileByNickname(dm *db.DatabaseManager, nickname string) (*models.Profile, error) {
 	dbo, err := dm.DB()
 	if err != nil {
-		return res, err
+		return nil, err
 	}
-	qres := dbo.QueryRowx(`
+	res := &models.Profile{}
+	err = dbo.Get(res, `
 		SELECT user_id, email, nickname, avatar, record, win, draws, loss FROM user_profile
 		WHERE nickname = $1`,
 		nickname)
-	if err := qres.Err(); err != nil {
-		return res, err
-	}
-	err = qres.StructScan(&res)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return res, UserNotFoundError{"nickname"}
@@ -166,15 +154,11 @@ func CheckExistenceOfEmail(dm *db.DatabaseManager, e string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	qres := dbo.QueryRowx(`
+	res := &models.Profile{}
+	err = dbo.Get(res, `
 	SELECT FROM user_profile
 	WHERE email = $1`,
 		e)
-	if err := qres.Err(); err != nil {
-		return false, err
-	}
-	res := models.Profile{}
-	err = qres.StructScan(&res)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil
@@ -186,19 +170,15 @@ func CheckExistenceOfEmail(dm *db.DatabaseManager, e string) (bool, error) {
 }
 
 func CheckExistenceOfNickname(dm *db.DatabaseManager, n string) (bool, error) {
-	res := models.Profile{}
 	dbo, err := dm.DB()
 	if err != nil {
 		return false, err
 	}
-	qres := dbo.QueryRowx(`
+	res := &models.Profile{}
+	err = dbo.Get(res, `
 		SELECT FROM user_profile
 		WHERE nickname = $1`,
 		n)
-	if err := qres.Err(); err != nil {
-		return false, err
-	}
-	err = qres.StructScan(&res)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil
@@ -215,13 +195,9 @@ func GetCountOfUsers(dm *db.DatabaseManager) (int, error) {
 		return 0, err
 	}
 	// TODO: optimize it
-	qres := dbo.QueryRowx(`
-	SELECT COUNT(*) FROM user_profile`)
-	if err := qres.Err(); err != nil {
-		return 0, err
-	}
 	res := 0
-	err = qres.Scan(&res)
+	err = dbo.Get(&res, `
+	SELECT COUNT(*) FROM user_profile`)
 	if err != nil {
 		return 0, err
 	}

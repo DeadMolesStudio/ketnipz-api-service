@@ -7,20 +7,20 @@ import (
 )
 
 func GetUserPositionsDescendingPaginated(dm *db.DatabaseManager, p *models.FetchScoreboardPage) (
-	[]models.Position, int, error) {
-	records := []models.Position{}
+	*[]models.Position, int, error) {
 	total, err := GetCountOfUsers(dm)
 	if err != nil {
-		return records, total, err
+		return nil, total, err
 	}
 
 	// TODO: optimize it
 	dbo, err := dm.DB()
 	if err != nil {
-		return records, total, err
+		return nil, total, err
 	}
 
-	err = dbo.Select(&records, `
+	records := &[]models.Position{}
+	err = dbo.Select(records, `
 		SELECT user_id, nickname, record FROM user_profile
 		ORDER BY record DESC
 		LIMIT $1
