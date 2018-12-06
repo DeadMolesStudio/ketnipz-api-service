@@ -109,16 +109,23 @@ func UpdateUserByID(dm *db.DatabaseManager, id uint, u *models.RegisterProfile) 
 	return nil
 }
 
-func GetUserProfileByID(dm *db.DatabaseManager, id uint) (*models.Profile, error) {
+func GetUserProfileByID(dm *db.DatabaseManager, id uint, with_email bool) (*models.Profile, error) {
 	dbo, err := dm.DB()
 	if err != nil {
 		return nil, err
 	}
 	res := &models.Profile{}
-	err = dbo.Get(res, `
+	q := ""
+	if with_email {
+		q = `
 		SELECT user_id, email, nickname, avatar, record, win, draws, loss FROM user_profile
-		WHERE user_id = $1`,
-		id)
+		WHERE user_id = $1`
+	} else {
+		q = `
+		SELECT user_id, nickname, avatar, record, win, draws, loss FROM user_profile
+		WHERE user_id = $1`
+	}
+	err = dbo.Get(res, q, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return res, UserNotFoundError{"id"}
@@ -136,7 +143,7 @@ func GetUserProfileByNickname(dm *db.DatabaseManager, nickname string) (*models.
 	}
 	res := &models.Profile{}
 	err = dbo.Get(res, `
-		SELECT user_id, email, nickname, avatar, record, win, draws, loss FROM user_profile
+		SELECT user_id, nickname, avatar, record, win, draws, loss FROM user_profile
 		WHERE nickname = $1`,
 		nickname)
 	if err != nil {

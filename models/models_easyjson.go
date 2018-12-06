@@ -54,7 +54,7 @@ func easyjsonD2b7633eEncodeApiModels(out *jwriter.Writer, in UserPassword) {
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if in.Email != "" {
 		const prefix string = ",\"email\":"
 		if first {
 			first = false
@@ -149,7 +149,7 @@ func easyjsonD2b7633eEncodeApiModels1(out *jwriter.Writer, in User) {
 		}
 		out.Uint(uint(in.UserID))
 	}
-	{
+	if in.Email != "" {
 		const prefix string = ",\"email\":"
 		if first {
 			first = false
@@ -315,7 +315,7 @@ func easyjsonD2b7633eEncodeApiModels3(out *jwriter.Writer, in RegisterProfile) {
 		}
 		out.String(string(in.Nickname))
 	}
-	{
+	if in.Email != "" {
 		const prefix string = ",\"email\":"
 		if first {
 			first = false
@@ -652,7 +652,7 @@ func easyjsonD2b7633eEncodeApiModels6(out *jwriter.Writer, in Profile) {
 		}
 		out.Uint(uint(in.UserID))
 	}
-	{
+	if in.Email != "" {
 		const prefix string = ",\"email\":"
 		if first {
 			first = false

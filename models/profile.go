@@ -22,7 +22,7 @@ type User struct {
 
 //easyjson:json
 type UserPassword struct {
-	Email    string `json:"email" example:"email@email.com" valid:"required~Почта не может быть пустой,email~Невалидная почта"`
+	Email    string `json:"email,omitempty" example:"email@email.com" valid:"required~Почта не может быть пустой,email~Невалидная почта"`
 	Password string `json:"password,omitempty" example:"password" valid:"stringlength(8|32)~Пароль должен быть не менее 8 символов и не более 32 символов"`
 }
 

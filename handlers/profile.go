@@ -154,7 +154,7 @@ func getProfile(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) 
 		return
 	}
 	if params.ID != 0 {
-		profile, err := database.GetUserProfileByID(dm, params.ID)
+		profile, err := database.GetUserProfileByID(dm, params.ID, false)
 		if err != nil {
 			switch err.(type) {
 			case database.UserNotFoundError:
@@ -202,7 +202,7 @@ func getProfile(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) 
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		profile, err := database.GetUserProfileByID(dm, r.Context().Value(middleware.KeyUserID).(uint))
+		profile, err := database.GetUserProfileByID(dm, r.Context().Value(middleware.KeyUserID).(uint), true)
 		if err != nil {
 			switch err.(type) {
 			case database.UserNotFoundError:
