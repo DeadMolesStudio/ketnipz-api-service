@@ -35,11 +35,11 @@ func cleanProfile(r *http.Request, p *models.RegisterProfile) error {
 func validateNickname(dm *db.DatabaseManager, s string) ([]models.ProfileError, error) {
 	var errors []models.ProfileError
 
-	isValid := govalidator.StringLength(s, "4", "32")
+	isValid := govalidator.StringLength(s, "4", "20")
 	if !isValid {
 		errors = append(errors, models.ProfileError{
 			Field: "nickname",
-			Text:  "Никнейм должен быть не менее 4 символов и не более 32 символов",
+			Text:  "Никнейм должен быть не менее 4 символов и не более 20 символов",
 		})
 		return errors, nil
 	}
