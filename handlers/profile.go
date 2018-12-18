@@ -89,11 +89,11 @@ func validateEmail(dm *db.DatabaseManager, s string) ([]models.ProfileError, err
 func validatePassword(s string) []models.ProfileError {
 	var errors []models.ProfileError
 
-	isValid := govalidator.StringLength(s, "8", "32")
+	isValid := govalidator.StringLength(s, "4", "32")
 	if !isValid {
 		errors = append(errors, models.ProfileError{
 			Field: "password",
-			Text:  "Пароль должен быть не менее 8 символов и не более 32 символов",
+			Text:  "Пароль должен быть не менее 4 символов и не более 32 символов",
 		})
 	}
 
