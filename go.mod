@@ -18,5 +18,6 @@ require (
 	github.com/swaggo/files v0.0.0-20180215091130-49c8a91ea3fa // indirect
 	github.com/swaggo/http-swagger v0.0.0-20180407044326-e030f0899372
 	github.com/swaggo/swag v1.4.0
+	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
 	golang.org/x/tools v0.0.0-20181130052023-1c3d964395ce // indirect
 )

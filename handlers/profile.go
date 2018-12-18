@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/asaskevich/govalidator"
+	"golang.org/x/crypto/bcrypt"
 
 	db "github.com/go-park-mail-ru/2018_2_DeadMolesStudio/database"
 	"github.com/go-park-mail-ru/2018_2_DeadMolesStudio/logger"
@@ -117,6 +118,27 @@ func validateFields(dm *db.DatabaseManager, u *models.RegisterProfile) ([]models
 	errors = append(errors, validatePassword(u.Password)...)
 
 	return errors, nil
+}
+
+func hashAndSalt(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+    if err != nil {
+        return "", err
+    }
+
+    return string(hash), err
+}
+
+func comparePasswords(hashed string, clean string) (bool, error) {
+    err := bcrypt.CompareHashAndPassword([]byte(hashed), []byte(clean))
+    switch err {
+	case nil:
+		return true, nil
+	case bcrypt.ErrMismatchedHashAndPassword:
+		return false, nil
+	default:
+        return false, err
+    }
 }
 
 func ProfileHandler(dm *db.DatabaseManager, sm *session.SessionManager) http.HandlerFunc {
@@ -275,6 +297,12 @@ func postProfile(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager,
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprintln(w, string(json))
 	} else {
+		u.Password, err = hashAndSalt(u.Password)
+		if err != nil {
+			logger.Errorf("hash and salt password error: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		newU, err := database.CreateNewUser(dm, u)
 		if err != nil {
 			if err == db.ErrUniqueConstraintViolation ||

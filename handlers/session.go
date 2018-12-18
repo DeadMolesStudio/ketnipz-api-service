@@ -137,7 +137,13 @@ func postSession(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager,
 		}
 		return
 	}
-	if u.Email == dbResponse.Email && u.Password == dbResponse.Password {
+	passwordsMatch, err := comparePasswords(dbResponse.Password, u.Password)
+	if err != nil {
+		logger.Errorf("compare passwords error: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if u.Email == dbResponse.Email && passwordsMatch {
 		err := loginUser(w, sm, dbResponse.UserID)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
