@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -16,21 +15,6 @@ import (
 	"api/database"
 	"api/models"
 )
-
-func cleanLoginInfo(r *http.Request, u *models.UserPassword) error {
-	body, err := ioutil.ReadAll(r.Body)
-	defer r.Body.Close()
-	if err != nil {
-		return err
-	}
-
-	err = u.UnmarshalJSON(body)
-	if err != nil {
-		return ParseJSONError{err}
-	}
-
-	return nil
-}
 
 func loginUser(w http.ResponseWriter, sm *session.SessionManager, userID uint) error {
 	sessionID, err := sm.Create(userID)
@@ -109,7 +93,7 @@ func postSession(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager,
 	}
 
 	u := &models.UserPassword{}
-	err := cleanLoginInfo(r, u)
+	err := unmarshalJSONBodyToStruct(r, u)
 	if err != nil {
 		switch err.(type) {
 		case ParseJSONError:
@@ -122,7 +106,7 @@ func postSession(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager,
 	}
 	isValid := govalidator.IsEmail(u.Email)
 	if !isValid {
-		sendError(w, r, fmt.Errorf("Невалидная почта"), http.StatusBadRequest)
+		sendError(w, fmt.Errorf("Невалидная почта"), http.StatusBadRequest)
 		return
 	}
 

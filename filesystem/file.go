@@ -12,12 +12,15 @@ import (
 	"github.com/go-park-mail-ru/2018_2_DeadMolesStudio/logger"
 )
 
-func GetHashedNameForFile(uID uint, filename string) string {
+func GetHashedNameForFile(uID uint, filename string) (string, error) {
 	hasher := sha256.New()
-	hasher.Write([]byte(time.Now().String() + fmt.Sprintf("%v", uID) + filename))
+	_, err := hasher.Write([]byte(time.Now().String() + fmt.Sprintf("%v", uID) + filename))
+	if err != nil {
+		return "", err
+	}
 	hash := hex.EncodeToString(hasher.Sum(nil))
 
-	return hash[:16] + path.Ext(filename)
+	return hash[:16] + path.Ext(filename), nil
 }
 
 func SaveFile(file io.Reader, dir, filename string) error {
@@ -32,7 +35,10 @@ func SaveFile(file io.Reader, dir, filename string) error {
 		return err
 	}
 	defer f.Close()
-	io.Copy(f, file)
+	_, err = io.Copy(f, file)
+	if err != nil {
+		return err
+	}
 	logger.Infow("saved file",
 		"path", dir,
 		"filename", filename)

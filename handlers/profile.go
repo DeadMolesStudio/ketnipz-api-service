@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/asaskevich/govalidator"
@@ -17,21 +16,6 @@ import (
 	"api/filesystem"
 	"api/models"
 )
-
-func cleanProfile(r *http.Request, p *models.RegisterProfile) error {
-	body, err := ioutil.ReadAll(r.Body)
-	defer r.Body.Close()
-	if err != nil {
-		return err
-	}
-
-	err = p.UnmarshalJSON(body)
-	if err != nil {
-		return ParseJSONError{err}
-	}
-
-	return nil
-}
 
 func validateNickname(dm *db.DatabaseManager, s string) ([]models.ProfileError, error) {
 	var errors []models.ProfileError
@@ -122,23 +106,23 @@ func validateFields(dm *db.DatabaseManager, u *models.RegisterProfile) ([]models
 
 func hashAndSalt(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-    if err != nil {
-        return "", err
-    }
+	if err != nil {
+		return "", err
+	}
 
-    return string(hash), err
+	return string(hash), err
 }
 
 func comparePasswords(hashed string, clean string) (bool, error) {
-    err := bcrypt.CompareHashAndPassword([]byte(hashed), []byte(clean))
-    switch err {
+	err := bcrypt.CompareHashAndPassword([]byte(hashed), []byte(clean))
+	switch err {
 	case nil:
 		return true, nil
 	case bcrypt.ErrMismatchedHashAndPassword:
 		return false, nil
 	default:
-        return false, err
-    }
+		return false, err
+	}
 }
 
 func ProfileHandler(dm *db.DatabaseManager, sm *session.SessionManager) http.HandlerFunc {
@@ -175,7 +159,8 @@ func getProfile(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) 
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if params.ID != 0 {
+	switch {
+	case params.ID != 0:
 		profile, err := database.GetUserProfileByID(dm, params.ID, false)
 		if err != nil {
 			switch err.(type) {
@@ -197,7 +182,7 @@ func getProfile(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) 
 			return
 		}
 		fmt.Fprintln(w, string(json))
-	} else if params.Nickname != "" {
+	case params.Nickname != "":
 		profile, err := database.GetUserProfileByNickname(dm, params.Nickname)
 		if err != nil {
 			switch err.(type) {
@@ -219,7 +204,7 @@ func getProfile(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) 
 			return
 		}
 		fmt.Fprintln(w, string(json))
-	} else {
+	default:
 		if !r.Context().Value(middleware.KeyIsAuthenticated).(bool) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
@@ -262,7 +247,7 @@ func getProfile(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) 
 // @Router /profile [POST]
 func postProfile(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager, sm *session.SessionManager) {
 	u := &models.RegisterProfile{}
-	err := cleanProfile(r, u)
+	err := unmarshalJSONBodyToStruct(r, u)
 	if err != nil {
 		switch err.(type) {
 		case ParseJSONError:
@@ -343,7 +328,7 @@ func putProfile(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) 
 	}
 
 	u := &models.RegisterProfile{}
-	err := cleanProfile(r, u)
+	err := unmarshalJSONBodyToStruct(r, u)
 	if err != nil {
 		switch err.(type) {
 		case ParseJSONError:
@@ -412,7 +397,7 @@ func putProfile(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) 
 }
 
 func AvatarHandler(dm *db.DatabaseManager) http.HandlerFunc {
-	return func (w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPut:
 			putAvatar(w, r, dm)
@@ -459,7 +444,12 @@ func putAvatar(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) {
 	uID := r.Context().Value(middleware.KeyUserID).(uint)
 	filename := fileHeader.Filename
 	dir := "static/img/"
-	filename = filesystem.GetHashedNameForFile(uID, filename)
+	filename, err = filesystem.GetHashedNameForFile(uID, filename)
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	err = filesystem.SaveFile(avatar, dir, filename)
 	if err != nil {
 		logger.Error(err)

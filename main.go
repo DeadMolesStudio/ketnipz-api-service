@@ -2,7 +2,7 @@ package main
 
 import (
 	"net/http"
-	
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -20,7 +20,12 @@ import (
 
 func main() {
 	l := logger.InitLogger()
-	defer l.Sync()
+	defer func() {
+		err := l.Sync()
+		if err != nil {
+			logger.Errorf("error while syncing log data: %v", err)
+		}
+	}()
 
 	prometheus.MustRegister(metrics.AccessHits)
 
@@ -33,33 +38,33 @@ func main() {
 	http.Handle("/metrics", promhttp.Handler())
 
 	http.HandleFunc(
-		"/session", 
-		middleware.RecoverMiddleware(metrics.MetricsHitsMiddleware(middleware.AccessLogMiddleware(
-		middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.SessionHandler(dm, sm), sm))))),
+		"/session",
+		middleware.RecoverMiddleware(metrics.CountHitsMiddleware(middleware.AccessLogMiddleware(
+			middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.SessionHandler(dm, sm), sm))))),
 	)
 	http.HandleFunc(
-		"/profile", 
-		middleware.RecoverMiddleware(metrics.MetricsHitsMiddleware(middleware.AccessLogMiddleware(
-		middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.ProfileHandler(dm, sm), sm))))),
+		"/profile",
+		middleware.RecoverMiddleware(metrics.CountHitsMiddleware(middleware.AccessLogMiddleware(
+			middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.ProfileHandler(dm, sm), sm))))),
 	)
 	http.HandleFunc(
-		"/profile/avatar", 
-		middleware.RecoverMiddleware(metrics.MetricsHitsMiddleware(middleware.AccessLogMiddleware(
-		middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.AvatarHandler(dm), sm))))),
+		"/profile/avatar",
+		middleware.RecoverMiddleware(metrics.CountHitsMiddleware(middleware.AccessLogMiddleware(
+			middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.AvatarHandler(dm), sm))))),
 	)
 	http.HandleFunc(
-		"/scoreboard", 
-		middleware.RecoverMiddleware(metrics.MetricsHitsMiddleware(middleware.AccessLogMiddleware(
-		middleware.CORSMiddleware(handlers.ScoreboardHandler(dm))))),
+		"/scoreboard",
+		middleware.RecoverMiddleware(metrics.CountHitsMiddleware(middleware.AccessLogMiddleware(
+			middleware.CORSMiddleware(handlers.ScoreboardHandler(dm))))),
 	)
 
 	// swag init -g handlers/api.go
 	http.HandleFunc("/api/docs/", httpSwagger.WrapHandler)
 
 	http.HandleFunc(
-		"/static/", 
-		middleware.RecoverMiddleware(metrics.MetricsHitsMiddleware(middleware.AccessLogMiddleware(
-		middleware.CORSMiddleware(filesystem.StaticHandler)))),
+		"/static/",
+		middleware.RecoverMiddleware(metrics.CountHitsMiddleware(middleware.AccessLogMiddleware(
+			middleware.CORSMiddleware(filesystem.StaticHandler)))),
 	)
 
 	logger.Info("starting server at: ", 8080)

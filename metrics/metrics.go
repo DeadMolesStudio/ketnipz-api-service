@@ -23,7 +23,7 @@ var (
 	)
 )
 
-func MetricsHitsMiddleware(next http.HandlerFunc) http.HandlerFunc {
+func CountHitsMiddleware(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ww := &wrappers.StatusWrapperForResponseWriter{
 			ResponseWriter: w,

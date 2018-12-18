@@ -18,7 +18,7 @@ func (e ParseJSONError) Error() string {
 	return fmt.Sprintf("error while parsing JSON: %v", e.msg)
 }
 
-func sendError(w http.ResponseWriter, r *http.Request, e error, status int) {
+func sendError(w http.ResponseWriter, e error, status int) {
 	errStruct := models.Error{What: e.Error()}
 	m, err := errStruct.MarshalJSON()
 	if err != nil {
