@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -19,6 +20,11 @@ import (
 )
 
 func main() {
+	dbConnStr := flag.String("db_connstr", "postgres@localhost:5432", "postgresql connection string")
+	dbName := flag.String("db_name", "postgres", "database name")
+	authConnStr := flag.String("auth_connstr", "localhost:8081", "auth-service connection string")
+	flag.Parse()
+
 	l := logger.InitLogger()
 	defer func() {
 		err := l.Sync()
@@ -29,10 +35,10 @@ func main() {
 
 	prometheus.MustRegister(metrics.AccessHits)
 
-	dm := database.InitDatabaseManager("postgres@postgres:5432", "ketnipz")
+	dm := database.InitDatabaseManager(*dbConnStr, *dbName)
 	defer dm.Close()
 
-	sm := session.ConnectSessionManager("auth-service:8081")
+	sm := session.ConnectSessionManager(*authConnStr)
 	defer sm.Close()
 
 	http.Handle("/metrics", promhttp.Handler())
