@@ -14,7 +14,7 @@ github.com/go-openapi/jsonreference
 github.com/go-openapi/spec
 # github.com/go-openapi/swag v0.17.0
 github.com/go-openapi/swag
-# github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181130120947-70c35d149846
+# github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181219090226-c921df812846
 github.com/go-park-mail-ru/2018_2_DeadMolesStudio/database
 github.com/go-park-mail-ru/2018_2_DeadMolesStudio/logger
 github.com/go-park-mail-ru/2018_2_DeadMolesStudio/middleware

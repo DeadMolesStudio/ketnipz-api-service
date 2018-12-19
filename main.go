@@ -32,7 +32,7 @@ func main() {
 	dm := database.InitDatabaseManager("postgres@postgres:5432", "ketnipz")
 	defer dm.Close()
 
-	sm := session.ConnectSessionManager()
+	sm := session.ConnectSessionManager("auth-service:8081")
 	defer sm.Close()
 
 	http.Handle("/metrics", promhttp.Handler())
@@ -61,10 +61,12 @@ func main() {
 	// swag init -g handlers/api.go
 	http.HandleFunc("/api/docs/", httpSwagger.WrapHandler)
 
+	stm := filesystem.NewStaticManager("/static/", "static")
+
 	http.HandleFunc(
 		"/static/",
 		middleware.RecoverMiddleware(metrics.CountHitsMiddleware(middleware.AccessLogMiddleware(
-			middleware.CORSMiddleware(filesystem.StaticHandler)))),
+			middleware.CORSMiddleware(stm)))),
 	)
 
 	logger.Info("starting server at: ", 8080)

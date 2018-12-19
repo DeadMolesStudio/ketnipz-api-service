@@ -4,7 +4,9 @@ import (
 	"net/http"
 )
 
-var fs = http.StripPrefix("/static/", http.FileServer(http.Dir("static")))
+type StaticManager struct {
+	fs http.Handler
+}
 
 // @Summary Отдать файл
 // @Description Отдать файл с диска
@@ -16,6 +18,12 @@ var fs = http.StripPrefix("/static/", http.FileServer(http.Dir("static")))
 // @Failure 404 "Файл не найден"
 // @Failure 500 "Внутренняя ошибка"
 // @Router /static/{path/to/file} [GET]
-func StaticHandler(w http.ResponseWriter, r *http.Request) {
-	fs.ServeHTTP(w, r)
+func (stm *StaticManager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	stm.fs.ServeHTTP(w, r)
+}
+
+func NewStaticManager(path, directory string) *StaticManager {
+	return &StaticManager{
+		fs: http.StripPrefix(path, http.FileServer(http.Dir(directory))),
+	}
 }

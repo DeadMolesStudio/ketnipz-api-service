@@ -5,7 +5,7 @@ require (
 	github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973 // indirect
 	github.com/go-openapi/jsonreference v0.17.2 // indirect
 	github.com/go-openapi/spec v0.17.2 // indirect
-	github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181130120947-70c35d149846
+	github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181219090226-c921df812846
 	github.com/gorilla/schema v1.0.2
 	github.com/lib/pq v1.0.0
 	github.com/mailru/easyjson v0.0.0-20180823135443-60711f1a8329
