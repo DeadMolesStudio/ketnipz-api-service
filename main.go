@@ -75,7 +75,7 @@ func main() {
 	)
 
 	// swag init -g handlers/api.go
-	http.HandleFunc("/api/docs/", httpSwagger.WrapHandler)
+	http.HandleFunc("/docs/", httpSwagger.WrapHandler)
 
 	stm := filesystem.NewStaticManager("/static/", "static")
 

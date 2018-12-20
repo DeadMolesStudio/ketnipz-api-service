@@ -16,21 +16,6 @@
     },
     "basePath": "/api",
     "paths": {
-        "/game/ws": {
-            "get": {
-                "description": "Инициализирует соединение для пользователя",
-                "summary": "Начать игру по WebSocket",
-                "operationId": "get-game-ws",
-                "responses": {
-                    "101": {
-                        "description": "Switching Protocols"
-                    },
-                    "400": {
-                        "description": "Нет нужных заголовков"
-                    }
-                }
-            }
-        },
         "/profile": {
             "get": {
                 "description": "Получить профиль пользователя по ID, никнейму или из сессии",
@@ -207,6 +192,119 @@
                 }
             }
         },
+        "/profile/skin": {
+            "get": {
+                "description": "Получить информацию о скине: ID, название и стоимость",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Получить информацию об одном скине или обо всех",
+                "operationId": "get-skin",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID",
+                        "name": "id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Скин/скины найдены",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.AllSkins"
+                        }
+                    },
+                    "400": {
+                        "description": "Неправильный запрос"
+                    },
+                    "404": {
+                        "description": "Не найдено"
+                    },
+                    "500": {
+                        "description": "Ошибка в бд"
+                    }
+                }
+            },
+            "put": {
+                "description": "Изменить скин, должен быть куплен",
+                "consumes": [
+                    "application/json"
+                ],
+                "summary": "Изменить скин",
+                "operationId": "put-skin",
+                "parameters": [
+                    {
+                        "description": "Скин, который надеваем",
+                        "name": "Profile",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.RequestSkin"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Пользователь найден, успешно надет скин, уже надет такой скин"
+                    },
+                    "400": {
+                        "description": "Неверный формат JSON"
+                    },
+                    "401": {
+                        "description": "Не залогинен, пользователь не существует"
+                    },
+                    "422": {
+                        "description": "Скин не куплен"
+                    },
+                    "500": {
+                        "description": "Ошибка в бд"
+                    }
+                }
+            },
+            "post": {
+                "description": "Купить новый скин, монет должно быть достаточно для совершения покупки",
+                "consumes": [
+                    "application/json"
+                ],
+                "summary": "Купить новый скин",
+                "operationId": "post-skin",
+                "parameters": [
+                    {
+                        "description": "Скин для покупки",
+                        "name": "Profile",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.RequestSkin"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Скин куплен (или уже есть)"
+                    },
+                    "400": {
+                        "description": "Неверный формат JSON"
+                    },
+                    "401": {
+                        "description": "Не залогинен, профиль не существует"
+                    },
+                    "404": {
+                        "description": "Скин не найден"
+                    },
+                    "422": {
+                        "description": "Недостаточно средств"
+                    },
+                    "500": {
+                        "description": "Ошибка в бд"
+                    }
+                }
+            }
+        },
         "/scoreboard": {
             "get": {
                 "description": "Получить таблицу лидеров (пагинация присутствует)",
@@ -353,6 +451,17 @@
         }
     },
     "definitions": {
+        "models.AllSkins": {
+            "type": "object",
+            "properties": {
+                "skins": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Skin"
+                    }
+                }
+            }
+        },
         "models.Position": {
             "type": "object",
             "properties": {
@@ -391,6 +500,12 @@
                 "avatar": {
                     "type": "string"
                 },
+                "coins": {
+                    "type": "integer"
+                },
+                "current_skin": {
+                    "type": "integer"
+                },
                 "draws": {
                     "type": "integer"
                 },
@@ -415,6 +530,12 @@
                 "record": {
                     "type": "integer"
                 },
+                "skins": {
+                    "type": "array",
+                    "items": {
+                        "type": "uint"
+                    }
+                },
                 "win": {
                     "type": "integer"
                 }
@@ -429,7 +550,7 @@
                 },
                 "text": {
                     "type": "string",
-                    "example": "Этот никнейм уже занят"
+                    "example": "This nickname is already taken."
                 }
             }
         },
@@ -461,12 +582,34 @@
                 }
             }
         },
+        "models.RequestSkin": {
+            "type": "object",
+            "properties": {
+                "skin": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.Session": {
             "type": "object",
             "properties": {
                 "session_id": {
                     "type": "string",
                     "example": "ef84d238-47ef-4452-9536-99380db79911"
+                }
+            }
+        },
+        "models.Skin": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },

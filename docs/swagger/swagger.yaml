@@ -1,5 +1,12 @@
 basePath: /api
 definitions:
+  models.AllSkins:
+    properties:
+      skins:
+        items:
+          $ref: '#/definitions/models.Skin'
+        type: array
+    type: object
   models.Position:
     properties:
       id:
@@ -26,6 +33,10 @@ definitions:
     properties:
       avatar:
         type: string
+      coins:
+        type: integer
+      current_skin:
+        type: integer
       draws:
         type: integer
       email:
@@ -43,6 +54,10 @@ definitions:
         type: string
       record:
         type: integer
+      skins:
+        items:
+          type: uint
+        type: array
       win:
         type: integer
     type: object
@@ -52,7 +67,7 @@ definitions:
         example: nickname
         type: string
       text:
-        example: Этот никнейм уже занят
+        example: This nickname is already taken.
         type: string
     type: object
   models.ProfileErrorList:
@@ -74,10 +89,24 @@ definitions:
         example: password
         type: string
     type: object
+  models.RequestSkin:
+    properties:
+      skin:
+        type: integer
+    type: object
   models.Session:
     properties:
       session_id:
         example: ef84d238-47ef-4452-9536-99380db79911
+        type: string
+    type: object
+  models.Skin:
+    properties:
+      cost:
+        type: integer
+      id:
+        type: integer
+      name:
         type: string
     type: object
   models.UserPassword:
@@ -101,16 +130,6 @@ info:
   title: The Ketnipz Game API
   version: "1.0"
 paths:
-  /game/ws:
-    get:
-      description: Инициализирует соединение для пользователя
-      operationId: get-game-ws
-      responses:
-        "101":
-          description: Switching Protocols
-        "400":
-          description: Нет нужных заголовков
-      summary: Начать игру по WebSocket
   /profile:
     get:
       description: Получить профиль пользователя по ID, никнейму или из сессии
@@ -232,6 +251,83 @@ paths:
         "500":
           description: Ошибка при парсинге, в бд, файловой системе
       summary: Изменить аватар
+  /profile/skin:
+    get:
+      description: 'Получить информацию о скине: ID, название и стоимость'
+      operationId: get-skin
+      parameters:
+      - description: ID
+        in: query
+        name: id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Скин/скины найдены
+          schema:
+            $ref: '#/definitions/models.AllSkins'
+            type: object
+        "400":
+          description: Неправильный запрос
+        "404":
+          description: Не найдено
+        "500":
+          description: Ошибка в бд
+      summary: Получить информацию об одном скине или обо всех
+    post:
+      consumes:
+      - application/json
+      description: Купить новый скин, монет должно быть достаточно для совершения
+        покупки
+      operationId: post-skin
+      parameters:
+      - description: Скин для покупки
+        in: body
+        name: Profile
+        required: true
+        schema:
+          $ref: '#/definitions/models.RequestSkin'
+          type: object
+      responses:
+        "200":
+          description: Скин куплен (или уже есть)
+        "400":
+          description: Неверный формат JSON
+        "401":
+          description: Не залогинен, профиль не существует
+        "404":
+          description: Скин не найден
+        "422":
+          description: Недостаточно средств
+        "500":
+          description: Ошибка в бд
+      summary: Купить новый скин
+    put:
+      consumes:
+      - application/json
+      description: Изменить скин, должен быть куплен
+      operationId: put-skin
+      parameters:
+      - description: Скин, который надеваем
+        in: body
+        name: Profile
+        required: true
+        schema:
+          $ref: '#/definitions/models.RequestSkin'
+          type: object
+      responses:
+        "200":
+          description: Пользователь найден, успешно надет скин, уже надет такой скин
+        "400":
+          description: Неверный формат JSON
+        "401":
+          description: Не залогинен, пользователь не существует
+        "422":
+          description: Скин не куплен
+        "500":
+          description: Ошибка в бд
+      summary: Изменить скин
   /scoreboard:
     get:
       description: Получить таблицу лидеров (пагинация присутствует)
