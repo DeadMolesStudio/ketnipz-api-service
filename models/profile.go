@@ -42,8 +42,3 @@ type ProfileError struct {
 type ProfileErrorList struct {
 	Errors []ProfileError `json:"error"`
 }
-
-type RequestProfile struct {
-	ID       uint
-	Nickname string
-}

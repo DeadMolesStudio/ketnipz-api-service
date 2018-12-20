@@ -6,7 +6,6 @@ require (
 	github.com/go-openapi/jsonreference v0.17.2 // indirect
 	github.com/go-openapi/spec v0.17.2 // indirect
 	github.com/go-park-mail-ru/2018_2_DeadMolesStudio v0.0.0-20181219090226-c921df812846
-	github.com/gorilla/schema v1.0.2
 	github.com/lib/pq v1.0.0
 	github.com/mailru/easyjson v0.0.0-20180823135443-60711f1a8329
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect

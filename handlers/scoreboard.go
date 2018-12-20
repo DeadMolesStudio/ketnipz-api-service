@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	db "github.com/go-park-mail-ru/2018_2_DeadMolesStudio/database"
 	"github.com/go-park-mail-ru/2018_2_DeadMolesStudio/logger"
@@ -24,15 +25,36 @@ func ScoreboardHandler(dm *db.DatabaseManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			params := &models.FetchScoreboardPage{}
-			err := decoder.Decode(params, r.URL.Query())
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				return
+			query := r.URL.Query()
+			rawLimit := query.Get("limit")
+			var limit uint64
+			var err error
+			if rawLimit != "" {
+				limit, err = strconv.ParseUint(rawLimit, 10, 64)
+				if err != nil {
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
 			}
-
+			// default limit value
+			if limit == 0 {
+				limit = 5
+			}
+			// limit the limit value
+			if limit > 100 {
+				limit = 100
+			}
+			rawPage := query.Get("page")
+			var page uint64
+			if rawPage != "" {
+				page, err = strconv.ParseUint(rawPage, 10, 64)
+				if err != nil {
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
+			}
 			records, total, err := database.GetUserPositionsDescendingPaginated(
-				dm, params)
+				dm, limit, page)
 			if err != nil {
 				logger.Error(err)
 				w.WriteHeader(http.StatusInternalServerError)

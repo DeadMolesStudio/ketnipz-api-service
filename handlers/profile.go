@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/asaskevich/govalidator"
 	"golang.org/x/crypto/bcrypt"
@@ -153,15 +154,44 @@ func ProfileHandler(dm *db.DatabaseManager, sm *session.SessionManager) http.Han
 // @Failure 500 "Ошибка в бд"
 // @Router /profile [GET]
 func getProfile(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) {
-	params := &models.RequestProfile{}
-	err := decoder.Decode(params, r.URL.Query())
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	query := r.URL.Query()
+	rawID := query.Get("id")
+	var id uint64
+	var err error
+	if rawID != "" {
+		id, err = strconv.ParseUint(rawID, 10, 64)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+	}
+	if id != 0 {
+		profile, err := database.GetUserProfileByID(dm, uint(id), false)
+		if err != nil {
+			switch err.(type) {
+			case database.UserNotFoundError:
+				w.WriteHeader(http.StatusNotFound)
+				return
+			default:
+				logger.Error(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json, err := profile.MarshalJSON()
+		if err != nil {
+			logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprintln(w, string(json))
 		return
 	}
-	switch {
-	case params.ID != 0:
-		profile, err := database.GetUserProfileByID(dm, params.ID, false)
+	nickname := query.Get("nickname")
+	if nickname != "" {
+		profile, err := database.GetUserProfileByNickname(dm, nickname)
 		if err != nil {
 			switch err.(type) {
 			case database.UserNotFoundError:
@@ -182,55 +212,34 @@ func getProfile(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) 
 			return
 		}
 		fmt.Fprintln(w, string(json))
-	case params.Nickname != "":
-		profile, err := database.GetUserProfileByNickname(dm, params.Nickname)
-		if err != nil {
-			switch err.(type) {
-			case database.UserNotFoundError:
-				w.WriteHeader(http.StatusNotFound)
-				return
-			default:
-				logger.Error(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json, err := profile.MarshalJSON()
-		if err != nil {
-			logger.Error(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		fmt.Fprintln(w, string(json))
-	default:
-		if !r.Context().Value(middleware.KeyIsAuthenticated).(bool) {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		profile, err := database.GetUserProfileByID(dm, r.Context().Value(middleware.KeyUserID).(uint), true)
-		if err != nil {
-			switch err.(type) {
-			case database.UserNotFoundError:
-				w.WriteHeader(http.StatusNotFound)
-				return
-			default:
-				logger.Error(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json, err := profile.MarshalJSON()
-		if err != nil {
-			logger.Error(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		fmt.Fprintln(w, string(json))
+		return
 	}
+
+	if !r.Context().Value(middleware.KeyIsAuthenticated).(bool) {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	profile, err := database.GetUserProfileByID(dm, r.Context().Value(middleware.KeyUserID).(uint), true)
+	if err != nil {
+		switch err.(type) {
+		case database.UserNotFoundError:
+			w.WriteHeader(http.StatusNotFound)
+			return
+		default:
+			logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json, err := profile.MarshalJSON()
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintln(w, string(json))
 }
 
 // @Summary Зарегистрироваться и залогиниться по новому профилю

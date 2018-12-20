@@ -6,7 +6,7 @@ import (
 	db "github.com/go-park-mail-ru/2018_2_DeadMolesStudio/database"
 )
 
-func GetUserPositionsDescendingPaginated(dm *db.DatabaseManager, p *models.FetchScoreboardPage) (
+func GetUserPositionsDescendingPaginated(dm *db.DatabaseManager, limit, page uint64) (
 	*[]models.Position, int, error) {
 	total, err := GetCountOfUsers(dm)
 	if err != nil {
@@ -25,7 +25,7 @@ func GetUserPositionsDescendingPaginated(dm *db.DatabaseManager, p *models.Fetch
 		ORDER BY record DESC
 		LIMIT $1
 		OFFSET $2`,
-		p.Limit, p.Limit*p.Page)
+		limit, limit*page)
 	if err != nil {
 		return records, total, err
 	}
