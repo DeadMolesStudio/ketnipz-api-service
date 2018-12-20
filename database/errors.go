@@ -4,6 +4,10 @@ import (
 	"fmt"
 )
 
+var (
+	ErrNotFound = fmt.Errorf("no rows found")
+)
+
 type UserNotFoundError struct {
 	Field string
 }

@@ -109,16 +109,16 @@ func UpdateUserByID(dm *db.DatabaseManager, id uint, u *models.RegisterProfile) 
 	return nil
 }
 
-func GetUserProfileByID(dm *db.DatabaseManager, id uint, withEmail bool) (*models.Profile, error) {
+func GetUserProfileByID(dm *db.DatabaseManager, id uint, private bool) (*models.Profile, error) {
 	dbo, err := dm.DB()
 	if err != nil {
 		return nil, err
 	}
 	res := &models.Profile{}
 	q := ""
-	if withEmail {
+	if private {
 		q = `
-		SELECT user_id, email, nickname, avatar, record, win, draws, loss FROM user_profile
+		SELECT user_id, email, nickname, avatar, record, win, draws, loss, coins, skin FROM user_profile
 		WHERE user_id = $1`
 	} else {
 		q = `
@@ -131,6 +131,18 @@ func GetUserProfileByID(dm *db.DatabaseManager, id uint, withEmail bool) (*model
 			return res, UserNotFoundError{"id"}
 		}
 		return res, err
+	}
+
+	if private {
+		var purchased []uint
+		err = dbo.Select(&purchased, `
+			SELECT skin_id FROM user_purchased_skins
+			WHERE user_id = $1`,
+			id)
+		if err != nil {
+			return res, err
+		}
+		res.PurchasedSkins = purchased
 	}
 
 	return res, nil
