@@ -59,6 +59,11 @@ func main() {
 			middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.AvatarHandler(dm), sm))))),
 	)
 	http.HandleFunc(
+		"/profile/check",
+		middleware.RecoverMiddleware(metrics.CountHitsMiddleware(middleware.AccessLogMiddleware(
+			middleware.CORSMiddleware(middleware.SessionMiddleware(handlers.CheckAvailabilityHandler(dm), sm))))),
+	)
+	http.HandleFunc(
 		"/scoreboard",
 		middleware.RecoverMiddleware(metrics.CountHitsMiddleware(middleware.AccessLogMiddleware(
 			middleware.CORSMiddleware(handlers.ScoreboardHandler(dm))))),

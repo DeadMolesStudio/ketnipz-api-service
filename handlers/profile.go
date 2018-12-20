@@ -496,3 +496,40 @@ func deleteAvatar(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager
 		return
 	}
 }
+
+func CheckAvailabilityHandler(dm *db.DatabaseManager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			query := r.URL.Query()
+			nickname := query.Get("nickname")
+			if nickname != "" {
+				exists, err := database.CheckExistenceOfNickname(dm, nickname)
+				if err != nil {
+					logger.Errorf("check availability error: %v", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				if exists {
+					w.WriteHeader(http.StatusForbidden)
+				}
+				return
+			}
+			email := query.Get("email")
+			if email != "" {
+				exists, err := database.CheckExistenceOfEmail(dm, email)
+				if err != nil {
+					logger.Errorf("check availability error: %v", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				if exists {
+					w.WriteHeader(http.StatusForbidden)
+				}
+				return
+			}
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	}
+}
