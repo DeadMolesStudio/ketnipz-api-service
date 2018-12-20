@@ -22,8 +22,8 @@ type User struct {
 
 //easyjson:json
 type UserPassword struct {
-	Email    string `json:"email,omitempty" example:"email@email.com" valid:"required~Почта не может быть пустой,email~Невалидная почта"`
-	Password string `json:"password,omitempty" example:"password" valid:"stringlength(4|32)~Пароль должен быть не менее 4 символов и не более 32 символов"`
+	Email    string `json:"email,omitempty" example:"email@email.com" valid:"required~Email can not be empty,email~Invalid email"`
+	Password string `json:"password,omitempty" example:"password" valid:"stringlength(4|32)~Password must be at least 4 characters and no more than 32 characters"`
 }
 
 type Stats struct {
@@ -35,7 +35,7 @@ type Stats struct {
 
 type ProfileError struct {
 	Field string `json:"field" example:"nickname"`
-	Text  string `json:"text" example:"Этот никнейм уже занят"`
+	Text  string `json:"text" example:"This nickname is already taken."`
 }
 
 //easyjson:json

@@ -25,7 +25,7 @@ func validateNickname(dm *db.DatabaseManager, s string) ([]models.ProfileError, 
 	if !isValid {
 		errors = append(errors, models.ProfileError{
 			Field: "nickname",
-			Text:  "Никнейм должен быть не менее 4 символов и не более 20 символов",
+			Text:  "Nickname must be at least 4 characters and no more than 20 characters.",
 		})
 		return errors, nil
 	}
@@ -38,7 +38,7 @@ func validateNickname(dm *db.DatabaseManager, s string) ([]models.ProfileError, 
 	if exists {
 		errors = append(errors, models.ProfileError{
 			Field: "nickname",
-			Text:  "Этот никнейм уже занят",
+			Text:  "This nickname is already taken.",
 		})
 	}
 
@@ -52,7 +52,7 @@ func validateEmail(dm *db.DatabaseManager, s string) ([]models.ProfileError, err
 	if !isValid {
 		errors = append(errors, models.ProfileError{
 			Field: "email",
-			Text:  "Невалидная почта",
+			Text:  "Invalid email.",
 		})
 		return errors, nil
 	}
@@ -65,7 +65,7 @@ func validateEmail(dm *db.DatabaseManager, s string) ([]models.ProfileError, err
 	if exists {
 		errors = append(errors, models.ProfileError{
 			Field: "email",
-			Text:  "Данная почта уже занята",
+			Text:  "This email is already taken.",
 		})
 	}
 
@@ -79,7 +79,7 @@ func validatePassword(s string) []models.ProfileError {
 	if !isValid {
 		errors = append(errors, models.ProfileError{
 			Field: "password",
-			Text:  "Пароль должен быть не менее 4 символов и не более 32 символов",
+			Text:  "Password must be at least 4 characters and no more than 32 characters.",
 		})
 	}
 
