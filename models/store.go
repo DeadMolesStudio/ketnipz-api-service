@@ -4,7 +4,7 @@ package models
 type Store struct {
 	Coins          *int   `json:"coins,omitempty"`
 	PurchasedSkins []uint `json:"skins,omitempty"`
-	Skin           *uint  `json:"current_skin,omitempty"`
+	Skin           *uint  `json:"current_skin"`
 }
 
 //easyjson:json

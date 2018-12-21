@@ -300,7 +300,7 @@ func easyjsonD2b7633eEncodeApiModels2(out *jwriter.Writer, in Store) {
 			out.RawByte(']')
 		}
 	}
-	if in.Skin != nil {
+	{
 		const prefix string = ",\"current_skin\":"
 		if first {
 			first = false
@@ -308,7 +308,11 @@ func easyjsonD2b7633eEncodeApiModels2(out *jwriter.Writer, in Store) {
 		} else {
 			out.RawString(prefix)
 		}
-		out.Uint(uint(*in.Skin))
+		if in.Skin == nil {
+			out.RawString("null")
+		} else {
+			out.Uint(uint(*in.Skin))
+		}
 	}
 	out.RawByte('}')
 }
@@ -1112,7 +1116,7 @@ func easyjsonD2b7633eEncodeApiModels10(out *jwriter.Writer, in Profile) {
 			out.RawByte(']')
 		}
 	}
-	if in.Skin != nil {
+	{
 		const prefix string = ",\"current_skin\":"
 		if first {
 			first = false
@@ -1120,7 +1124,11 @@ func easyjsonD2b7633eEncodeApiModels10(out *jwriter.Writer, in Profile) {
 		} else {
 			out.RawString(prefix)
 		}
-		out.Uint(uint(*in.Skin))
+		if in.Skin == nil {
+			out.RawString("null")
+		} else {
+			out.Uint(uint(*in.Skin))
+		}
 	}
 	{
 		const prefix string = ",\"record\":"

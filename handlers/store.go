@@ -209,7 +209,8 @@ func changeSkin(w http.ResponseWriter, r *http.Request, dm *db.DatabaseManager) 
 			}
 		}
 	} else {
-		hasSkin = true // all users have default skin
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
 	}
 
 	if hasSkin {

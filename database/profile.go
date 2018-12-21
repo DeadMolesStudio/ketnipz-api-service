@@ -11,6 +11,10 @@ import (
 	"api/models"
 )
 
+const (
+	defaultSkinID = 1
+)
+
 func GetUserPassword(dm *db.DatabaseManager, e string) (*models.User, error) {
 	dbo, err := dm.DB()
 	if err != nil {
@@ -36,10 +40,17 @@ func CreateNewUser(dm *db.DatabaseManager, u *models.RegisterProfile) (*models.P
 	if err != nil {
 		return nil, err
 	}
-	qres := dbo.QueryRowx(`
-		INSERT INTO user_profile (email, password, nickname)
-		VALUES ($1, $2, $3) RETURNING user_id, email, nickname`,
-		u.Email, u.Password, u.Nickname)
+	tx, err := dbo.Beginx()
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+	qres := tx.QueryRowx(`
+		INSERT INTO user_profile (email, password, nickname, skin)
+		VALUES ($1, $2, $3, $4) RETURNING user_id, email, nickname`,
+		u.Email, u.Password, u.Nickname, defaultSkinID)
 	if err := qres.Err(); err != nil {
 		pqErr := err.(*pq.Error)
 		switch pqErr.Code {
@@ -54,8 +65,15 @@ func CreateNewUser(dm *db.DatabaseManager, u *models.RegisterProfile) (*models.P
 	if err != nil {
 		return res, err
 	}
+	_, err = tx.Exec(`
+		INSERT INTO user_purchased_skins (user_id, skin_id)
+		VALUES ($1, $2)`,
+		res.UserID, defaultSkinID)
+	if err != nil {
+		return res, err
+	}
 
-	return res, nil
+	return res, tx.Commit()
 }
 
 func UpdateUserByID(dm *db.DatabaseManager, id uint, u *models.RegisterProfile) error {
@@ -122,7 +140,7 @@ func GetUserProfileByID(dm *db.DatabaseManager, id uint, private bool) (*models.
 		WHERE user_id = $1`
 	} else {
 		q = `
-		SELECT user_id, nickname, avatar, record, win, draws, loss FROM user_profile
+		SELECT user_id, nickname, avatar, record, win, draws, loss, skin FROM user_profile
 		WHERE user_id = $1`
 	}
 	err = dbo.Get(res, q, id)
